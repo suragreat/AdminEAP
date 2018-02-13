@@ -130,6 +130,7 @@ public class QueryUtil {
             Method method = clazz.getDeclaredMethod(query.getMethod(), QueryCondition.class, PageInfo.class);
             return (List) method.invoke(service, queryCondition, pageInfo);
         } catch (Exception ex) {
+            logger.error("查询出错", ex);
             throw new QueryException("【" + query.getService() + "】接口的【" + query.getMethod() + "】方法调用异常");
         }
     }
