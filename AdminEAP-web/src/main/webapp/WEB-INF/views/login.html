@@ -39,11 +39,11 @@
     </div>
     <!-- /.login-logo -->
     <div class="login-box-body">
-        <p class="login-box-msg">测试账号 test/bill</p>
+        <p class="login-box-msg">欢迎登录</p>
 
         <form action="${basePath}/login" method="post" id="login-form">
             <div class="form-group has-feedback">
-                <input type="text" class="form-control"  name="userName" placeholder="请输入登录邮箱/登录名">
+                <input type="text" class="form-control"  name="userName" placeholder="请输入登录名">
                 <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
             </div>
             <div class="form-group has-feedback">
@@ -58,15 +58,7 @@
                         </label>
                     </div>
                 </div>
-                <!-- /.col -->
-                <div class="col-xs-6">
-                    <div class="checkbox pull-right">
-                        <a href="#">忘记密码</a>
-                        <span>&nbsp;/&nbsp;</span>
-                        <a href="${basePath}/register" class="text-center">注册</a>
-                    </div>
-                </div>
-                <!-- /.col -->
+                 <!-- /.col -->
             </div>
             <div class="row">
                 <div class="col-xs-12">
@@ -76,25 +68,7 @@
         </form>
 
 
-        <div class="social-auth-links" style="margin-bottom: 0px;">
-            <div class="row">
-                <div class="col-xs-5">
-                    <div class="text-left" style="margin-top: 5px;">快速登录</div>
-                </div>
-                <div class="col-xs-7">
-                    <div class="text-right">
-                        <!--<a class="btn btn-social-icon btn-primary"><i class="fa fa-qq"></i></a>
-                        <a class="btn btn-social-icon btn-success"><i class="fa fa-wechat"></i></a>
-                        <a class="btn btn-social-icon btn-warning"><i class="fa fa-weibo"></i></a>
-                        <a class="btn btn-social-icon btn-info"><i class="fa fa-github"></i></a>-->
-                        <#list oAuthServices as oauth>
-                            <a class="btn btn-social-icon ${oauth.btnClass}" href="${oauth.authorizationUrl}"><i class="fa fa-${oauth.oAuthType}"></i></a>
-                        </#list>
-                    </div>
-                </div>
-            </div>
-            <!-- /.social-auth-links -->
-        </div>
+         </div>
         <!-- /.login-box-body -->
     </div>
     <!-- /.login-box -->
