@@ -3,6 +3,7 @@ package com.cnpc.framework.base.controller;
 import com.alibaba.fastjson.JSON;
 import com.cnpc.framework.annotation.RefreshCSRFToken;
 import com.cnpc.framework.annotation.VerifyCSRFToken;
+import com.cnpc.framework.base.entity.NewPasswordUser;
 import com.cnpc.framework.base.entity.User;
 import com.cnpc.framework.base.entity.UserAvatar;
 import com.cnpc.framework.base.pojo.PageInfo;
@@ -12,7 +13,7 @@ import com.cnpc.framework.base.service.UserService;
 import com.cnpc.framework.utils.EncryptUtil;
 import com.cnpc.framework.utils.PropertiesUtil;
 import com.cnpc.framework.utils.StrUtil;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.criterion.DetachedCriteria;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Controller;
@@ -37,7 +38,7 @@ public class UserController {
     @Resource
     private UserRoleService userRoleService;
 
-    private final static String initPassword= PropertiesUtil.getValue("user.initPassword");
+    private final static String initPassword = PropertiesUtil.getValue("user.initPassword");
 
     /**
      * 用户编辑
@@ -62,8 +63,8 @@ public class UserController {
     }
 
     //用户列表 测试数据权限
-    @RequestMapping(method = RequestMethod.GET, value="/list_ff")
-    private String listForFf(){
+    @RequestMapping(method = RequestMethod.GET, value = "/list_ff")
+    private String listForFf() {
         return "base/user/user_ff_list";
     }
 
@@ -73,16 +74,16 @@ public class UserController {
     private Result saveUser(User user, HttpServletRequest request) {
         if (StrUtil.isEmpty(user.getId())) {
             //设置初始密码
-            user.setPassword(EncryptUtil.getPassword(initPassword,user.getLoginName()));
+            user.setPassword(EncryptUtil.getPassword(initPassword, user.getLoginName()));
             String userId = userService.save(user).toString();
             userRoleService.setRoleForRegisterUser(userId);
             //头像和用户管理
             userService.updateUserAvatar(user, request.getRealPath("/"));
         } else {
-            User oldUser=this.getUser(user.getId());
-            BeanUtils.copyProperties(user,oldUser,"password");
-            if(!oldUser.getLoginName().equals(user.getLoginName())){
-                oldUser.setPassword(EncryptUtil.getPassword(initPassword,user.getLoginName()));
+            User oldUser = this.getUser(user.getId());
+            BeanUtils.copyProperties(user, oldUser, "password");
+            if (!oldUser.getLoginName().equals(user.getLoginName())) {
+                oldUser.setPassword(EncryptUtil.getPassword(initPassword, user.getLoginName()));
             }
             oldUser.setUpdateDateTime(new Date());
             userService.update(oldUser);
@@ -187,17 +188,49 @@ public class UserController {
                                  @PathVariable("callback") String callback, HttpServletRequest request) {
         request.setAttribute("multiple", multiple);
         request.setAttribute("ids", ids);
-        request.setAttribute("callback",callback);
+        request.setAttribute("callback", callback);
         return "base/user/user_select_list";
     }
 
     @RequestMapping(value = "/names", method = RequestMethod.POST)
     @ResponseBody
     public Map getNamesByIds(String ids) {
-        Map<String,String> map=new HashMap<>();
-            String names=userService.getUserNamesByUserIds(ids);
-            map.put("name",names);
-            return map;
+        Map<String, String> map = new HashMap<>();
+        String names = userService.getUserNamesByUserIds(ids);
+        map.put("name", names);
+        return map;
 
+    }
+
+    @RefreshCSRFToken
+    @RequestMapping(method = RequestMethod.GET, value = "/pwd")
+    private String pwdDialog(String id, HttpServletRequest request) {
+        request.setAttribute("id", id);
+        return "base/user/user_pwd";
+    }
+
+    @VerifyCSRFToken
+    @RequestMapping(method = RequestMethod.POST, value = "/changePwd")
+    @ResponseBody
+    private Result changePwd(NewPasswordUser user, HttpServletRequest request) {
+        if (StringUtils.isAnyBlank(user.getId())) {
+            return new Result(false, "用户ID不能为空");
+        } else {
+            User oldUser = this.getUser(user.getId());
+            if (oldUser == null ) {
+                return new Result(false, "用户不存在");
+            }
+            if (!StringUtils.equals(user.getNewPassword(), user.getConfirmPassword())) {
+                return new Result(false, "用户新密码不匹配");
+            }
+            String pwd = EncryptUtil.getPassword(user.getOldPassword(), oldUser.getLoginName());
+            if (!oldUser.getPassword().equals(pwd)) {
+                return new Result(false, "用户密码不正确");
+            }
+            oldUser.setPassword(EncryptUtil.getPassword(user.getNewPassword(), oldUser.getLoginName()));
+            oldUser.setUpdateDateTime(new Date());
+            userService.update(oldUser);
+        }
+        return new Result(true);
     }
 }

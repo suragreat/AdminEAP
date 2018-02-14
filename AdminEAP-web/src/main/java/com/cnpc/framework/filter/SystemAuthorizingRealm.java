@@ -7,6 +7,7 @@ import com.cnpc.framework.base.service.RoleService;
 import com.cnpc.framework.base.service.UserService;
 import com.cnpc.framework.utils.PropertiesUtil;
 import com.cnpc.framework.utils.StrUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationException;
@@ -59,6 +60,12 @@ public class SystemAuthorizingRealm extends AuthorizingRealm {
             SecurityUtils.getSubject().getSession().setAttribute("user", user);
             SecurityUtils.getSubject().getSession().setAttribute("userId", user.getId());
             UserAvatar avatar = userService.getAvatarByUserId(user.getId());
+            if (avatar == null) {
+                avatar = new UserAvatar();
+            }
+            if (StringUtils.isBlank(avatar.getSrc())) {
+                avatar.setSrc("/resources/adminlte/dist/img/user0-160x160.jpg");
+            }
             SecurityUtils.getSubject().getSession().setAttribute("userAvatar", avatar);
             // 注意此处的返回值没有使用加盐方式,如需要加盐，可以在密码参数上加
             return new SimpleAuthenticationInfo(user.getId(), token.getPassword(), token.getUsername());

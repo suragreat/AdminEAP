@@ -1,18 +1,5 @@
 package com.cnpc.framework.interceptor;
 
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-
 import com.alibaba.fastjson.JSONObject;
 import com.cnpc.framework.annotation.RefreshCSRFToken;
 import com.cnpc.framework.annotation.VerifyCSRFToken;
@@ -20,6 +7,17 @@ import com.cnpc.framework.base.pojo.ResultCode;
 import com.cnpc.framework.constant.CodeConstant;
 import com.cnpc.framework.utils.CSRFTokenUtil;
 import com.cnpc.framework.utils.StrUtil;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * CSRFInterceptor 防止跨站请求伪造拦截器
@@ -83,10 +81,11 @@ public class CSRFInterceptor extends HandlerInterceptorAdapter {
         // 刷新token
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         Method method = handlerMethod.getMethod();
-        RefreshCSRFToken refreshAnnotation = method.getAnnotation(RefreshCSRFToken.class);
 
         // 跳转到一个新页面 刷新token
         String xrq = request.getHeader("X-Requested-With");
+
+        RefreshCSRFToken refreshAnnotation = method.getAnnotation(RefreshCSRFToken.class);
         if (refreshAnnotation != null && refreshAnnotation.refresh() && StrUtil.isEmpty(xrq)) {
             request.getSession().setAttribute("CSRFToken", CSRFTokenUtil.generate(request));
             return;
@@ -102,17 +101,19 @@ public class CSRFInterceptor extends HandlerInterceptorAdapter {
                     //前端ERROR 处理
                     Map<String, String> map = new HashMap<String, String>();
                     map.put("CSRFToken", CSRFTokenUtil.generate(request));
+                    request.getSession().setAttribute("CSRFToken", map.get("CSRFToken"));
                     response.setContentType("application/json;charset=UTF-8");
                     OutputStream out = response.getOutputStream();
                     out.write((",'csrf':" + JSONObject.toJSONString(map) + "}").getBytes("UTF-8"));
                 }
             }
         }
+
     }
 
     /**
      * 处理跨站请求伪造 针对需要登录后才能处理的请求,验证CSRFToken校验
-     * 
+     *
      * @param request
      */
     protected boolean verifyCSRFToken(HttpServletRequest request) {
