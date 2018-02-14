@@ -4,7 +4,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.io.*;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -107,6 +106,9 @@ public class FileUtil {
         int bytesum = 0;
         int byteread = 0;
         byte[] buffer = new byte[1024];
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
         FileOutputStream fs = new FileOutputStream(file);
         while ((byteread = inStream.read(buffer)) != -1) {
             bytesum += byteread; //字节数 文件大小
@@ -177,7 +179,7 @@ public class FileUtil {
             }
             out.close();
             return strZipName;
-        }catch (IOException ex){
+        } catch (IOException ex) {
             return null;
         }
     }

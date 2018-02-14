@@ -110,15 +110,15 @@ public class UploaderController {
                     initParams = new String(bytes, "UTF-8");
                     inputStream.close();
                 } else if (isSourcePic || fieldName.startsWith("__avatar")) {
-                    String virtualPath = dirPath + relPath + "\\" + fileName;
+                    String virtualPath = dirPath + relPath + File.separator  + fileName;
                     if (avatarNumber > 1) {
                         fileName = avatarNumber + fileName;
-                        virtualPath = dirPath + relPath + "\\" + fileName;
+                        virtualPath = dirPath + relPath + File.separator  + fileName;
                     }
                     // 原始图片(file 域的名称：__source，如果客户端定义可以上传的话，可在此处理）。
                     if (isSourcePic) {
                         fileName = "source" + fileName;
-                        virtualPath = dirPath + relPath + "\\" + fileName;
+                        virtualPath = dirPath + relPath + File.separator  + fileName;
                         result.setSourceUrl(relPath + "/" + fileName);
                     }
                     // 头像图片(file 域的名称：__avatar1,2,3...)。
@@ -127,7 +127,7 @@ public class UploaderController {
                     }
 
                     inputStream = new BufferedInputStream(mFile.getInputStream());
-                    outputStream = new BufferedOutputStream(new FileOutputStream(virtualPath.replace("/", "\\")));
+                    outputStream = new BufferedOutputStream(new FileOutputStream(virtualPath));
                     Streams.copy(inputStream, outputStream, true);
                     inputStream.close();
                     outputStream.flush();

@@ -86,5 +86,9 @@ public class EncDataSource extends DruidDataSource {
     public static void main(String[] a) {
         System.out.println(encryptAES("root", KEY_TXT));
         System.out.println(encryptAES("msqlro0t", KEY_TXT));
+
+        System.out.println(encryptAES("admineap", KEY_TXT));
+        System.out.println(encryptAES("admineappwd0", KEY_TXT));
+
     }
 }
