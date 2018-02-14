@@ -38,4 +38,6 @@ public interface UserService extends BaseService {
     void deleteAuthInRedis(String userId);
 
     String getUserNamesByUserIds(String userIds);
+
+    void refreshSession(User user);
 }

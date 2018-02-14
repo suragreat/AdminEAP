@@ -71,41 +71,50 @@ public class ${javaPrefix}Controller {
         </#if>
     </#list>
     public Result save(<#if isObj=1>${javaPrefix} ${htmlPrefix}<#else>String obj</#if>){
-        <#if isObj=0>
-        ${javaPrefix} ${htmlPrefix}= JSON.parseObject(obj,${javaPrefix}.class);
-        <#list fields as field>
-        <#if field.columnName?contains(".")>
-            <#assign fieldName=field.columnName?substring(0,field.columnName?index_of("."))>
-            <#assign fieldN=fieldName?substring(0,1)?upper_case+fieldName?substring(1)>
-        ${htmlPrefix}.set${fieldN}(<#if javaTypes?contains("service")>${htmlPrefix}Service<#else>baseService</#if>.get(${field.type}.class,${htmlPrefix}.get${fieldN}().getId()));
-        </#if>
-        </#list>
-        </#if>
-        if(StrUtil.isEmpty(${htmlPrefix}.getId())){
-        <#if dateFields?exists&&(dateFields?size>0)>
-            <#list dateFields as date>
-            ${date};
+        try {
+            <#if isObj=0>
+            ${javaPrefix} ${htmlPrefix}= JSON.parseObject(obj,${javaPrefix}.class);
+            <#list fields as field>
+            <#if field.columnName?contains(".")>
+                <#assign fieldName=field.columnName?substring(0,field.columnName?index_of("."))>
+                <#assign fieldN=fieldName?substring(0,1)?upper_case+fieldName?substring(1)>
+            ${htmlPrefix}.set${fieldN}(<#if javaTypes?contains("service")>${htmlPrefix}Service<#else>baseService</#if>.get(${field.type}.class,${htmlPrefix}.get${fieldN}().getId()));
+            </#if>
             </#list>
-        </#if>
-            <#if javaTypes?contains("service")>${htmlPrefix}Service<#else>baseService</#if>.save(${htmlPrefix});
-        }
-        else{
-        <#if leftFields?exists&&(leftFields?size>0)>
-            ${javaPrefix} ${htmlPrefix}_old=<#if javaTypes?contains("service")>${htmlPrefix}Service<#else>baseService</#if>.get(${javaPrefix}.class,${htmlPrefix}.getId());
-            BeanUtils.copyProperties(${htmlPrefix},${htmlPrefix}_old, <#list leftFields as str><#if str_index==0>"${str}"<#else>,"${str}"</#if></#list>);
-            <#if leftDates?exists&&(leftDates?size>0)>
-                <#list leftDates as ld>
-             ${ld};
+            </#if>
+            if(StrUtil.isEmpty(${htmlPrefix}.getId())){
+            <#if dateFields?exists&&(dateFields?size>0)>
+                <#list dateFields as date>
+                ${date};
                 </#list>
             </#if>
-            ${htmlPrefix}_old.setUpdateDateTime(new Date());
-            <#if javaTypes?contains("service")>${htmlPrefix}Service<#else>baseService</#if>.update(${htmlPrefix}_old);
-            <#else>
-            ${htmlPrefix}.setUpdateDateTime(new Date());
-            <#if javaTypes?contains("service")>${htmlPrefix}Service<#else>baseService</#if>.update(${htmlPrefix});
-            </#if>
+                <#if javaTypes?contains("service")>${htmlPrefix}Service<#else>baseService</#if>.save(${htmlPrefix});
+            }
+            else{
+            <#if leftFields?exists&&(leftFields?size>0)>
+                ${javaPrefix} ${htmlPrefix}_old=<#if javaTypes?contains("service")>${htmlPrefix}Service<#else>baseService</#if>.get(${javaPrefix}.class,${htmlPrefix}.getId());
+                BeanUtils.copyProperties(${htmlPrefix},${htmlPrefix}_old, <#list leftFields as str><#if str_index==0>"${str}"<#else>,"${str}"</#if></#list>);
+                <#if leftDates?exists&&(leftDates?size>0)>
+                    <#list leftDates as ld>
+                 ${ld};
+                    </#list>
+                </#if>
+                ${htmlPrefix}_old.setUpdateDateTime(new Date());
+                <#if javaTypes?contains("service")>${htmlPrefix}Service<#else>baseService</#if>.update(${htmlPrefix}_old);
+                <#else>
+                ${htmlPrefix}.setUpdateDateTime(new Date());
+                <#if javaTypes?contains("service")>${htmlPrefix}Service<#else>baseService</#if>.update(${htmlPrefix});
+                </#if>
+            }
+            return new Result(true);
+        } catch (Exception e) {
+        logger.error("保存数据出错", e);
+        String message = "保存数据出错，请稍后重试";
+        if (DataIntegrityViolationException.class.isAssignableFrom(e.getClass())) {
+            message = "业务主键冲突";
         }
-        return new Result(true);
+        return new Result(false, message);
+        }
     }
 
 

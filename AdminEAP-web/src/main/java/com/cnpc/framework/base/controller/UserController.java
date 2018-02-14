@@ -14,8 +14,12 @@ import com.cnpc.framework.utils.EncryptUtil;
 import com.cnpc.framework.utils.PropertiesUtil;
 import com.cnpc.framework.utils.StrUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.hibernate.criterion.DetachedCriteria;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,6 +43,8 @@ public class UserController {
     private UserRoleService userRoleService;
 
     private final static String initPassword = PropertiesUtil.getValue("user.initPassword");
+
+    private static Logger logger = LoggerFactory.getLogger(UserController.class);
 
     /**
      * 用户编辑
@@ -72,23 +78,39 @@ public class UserController {
     @RequestMapping(method = RequestMethod.POST, value = "/save")
     @ResponseBody
     private Result saveUser(User user, HttpServletRequest request) {
-        if (StrUtil.isEmpty(user.getId())) {
-            //设置初始密码
-            user.setPassword(EncryptUtil.getPassword(initPassword, user.getLoginName()));
-            String userId = userService.save(user).toString();
-            userRoleService.setRoleForRegisterUser(userId);
-            //头像和用户管理
-            userService.updateUserAvatar(user, request.getRealPath("/"));
-        } else {
-            User oldUser = this.getUser(user.getId());
-            BeanUtils.copyProperties(user, oldUser, "password");
-            if (!oldUser.getLoginName().equals(user.getLoginName())) {
-                oldUser.setPassword(EncryptUtil.getPassword(initPassword, user.getLoginName()));
+        try {
+            if (StrUtil.isEmpty(user.getId())) {
+                //设置初始密码
+                user.setPassword(EncryptUtil.getPassword(initPassword, user.getLoginName()));
+                String userId = userService.save(user).toString();
+                userRoleService.setRoleForRegisterUser(userId);
+                //头像和用户管理
+                userService.updateUserAvatar(user, request.getRealPath("/"));
+            } else {
+                User oldUser = this.getUser(user.getId());
+                BeanUtils.copyProperties(user, oldUser, "password");
+                if (!oldUser.getLoginName().equals(user.getLoginName())) {
+                    oldUser.setPassword(EncryptUtil.getPassword(initPassword, user.getLoginName()));
+                }
+                oldUser.setUpdateDateTime(new Date());
+                userService.update(oldUser);
             }
-            oldUser.setUpdateDateTime(new Date());
-            userService.update(oldUser);
+            refreshSessionOnDemand(user);
+            return new Result(true);
+        } catch (Exception e) {
+            logger.error("保存用户信息出错", e);
+            String message = "保存用户出错，请稍后重试";
+            if (DataIntegrityViolationException.class.isAssignableFrom(e.getClass())) {
+                message = "登录名不能重复";
+            }
+            return new Result(false, message);
         }
-        return new Result(true);
+    }
+
+    private void refreshSessionOnDemand(User user) {
+        if (StringUtils.equals((CharSequence) SecurityUtils.getSubject().getSession().getAttribute("userId"), user.getId())) {
+            userService.refreshSession(user);
+        }
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/delete/{id}")
@@ -203,6 +225,13 @@ public class UserController {
     }
 
     @RefreshCSRFToken
+    @RequestMapping(method = RequestMethod.GET, value = "/profile")
+    private String userProfile(String id, HttpServletRequest request) {
+        request.setAttribute("id", id);
+        return "base/user/user_profile";
+    }
+
+    @RefreshCSRFToken
     @RequestMapping(method = RequestMethod.GET, value = "/pwd")
     private String pwdDialog(String id, HttpServletRequest request) {
         request.setAttribute("id", id);
@@ -217,7 +246,7 @@ public class UserController {
             return new Result(false, "用户ID不能为空");
         } else {
             User oldUser = this.getUser(user.getId());
-            if (oldUser == null ) {
+            if (oldUser == null) {
                 return new Result(false, "用户不存在");
             }
             if (!StringUtils.equals(user.getNewPassword(), user.getConfirmPassword())) {

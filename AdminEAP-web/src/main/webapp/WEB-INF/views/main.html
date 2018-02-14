@@ -70,8 +70,8 @@
                 <ul class="nav navbar-nav">
                     <!-- Control Sidebar Toggle Button -->
                     <li class="user user-menu">
-                        <a href="#">
-                            <img src="${basePath}${userAvatar.src}" class="user-image" alt="User Image">
+                        <a href="javascript:userProfile();">
+                            <img src="${basePath}${userAvatar.src}" class="user-image" alt="">
                             <span class="hidden-xs">${user.name}</span>
                         </a>
                     </li>
@@ -244,6 +244,16 @@
             url:basePath+"/user/pwd?id=${user.id}",
         });
     }
+
+    function userProfile() {
+        modals.openWin({
+            winId:'userProfile',
+            title:'用户资料【${user.name}】',
+            width:'900px',
+            url:basePath+"/user/profile?id=${user.id}",
+        });
+    }
+
 
     $(function () {
         //首页默认加载

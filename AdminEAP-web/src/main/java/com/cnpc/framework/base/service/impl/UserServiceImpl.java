@@ -8,6 +8,8 @@ import com.cnpc.framework.base.entity.UserAvatar;
 import com.cnpc.framework.base.service.UserService;
 import com.cnpc.framework.constant.RedisConstant;
 import com.cnpc.framework.utils.StrUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.stereotype.Service;
 
@@ -90,6 +92,20 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService {
         buf.append(" where id in (" + StrUtil.getInStr(userIds) + ")");
         List list = this.findMapBySql(buf.toString());
         return StrUtil.mapToStr(list, "name");
+    }
+
+    @Override
+    public void refreshSession(User user) {
+        SecurityUtils.getSubject().getSession().setAttribute("user", user);
+        SecurityUtils.getSubject().getSession().setAttribute("userId", user.getId());
+        UserAvatar avatar = getAvatarByUserId(user.getId());
+        if (avatar == null) {
+            avatar = new UserAvatar();
+        }
+        if (StringUtils.isBlank(avatar.getSrc())) {
+            avatar.setSrc("/resources/adminlte/dist/img/user0-160x160.jpg");
+        }
+        SecurityUtils.getSubject().getSession().setAttribute("userAvatar", avatar);
     }
 
 

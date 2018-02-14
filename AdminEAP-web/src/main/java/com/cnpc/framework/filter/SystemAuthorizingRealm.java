@@ -57,16 +57,8 @@ public class SystemAuthorizingRealm extends AuthorizingRealm {
                 throw new IncorrectCredentialsException();
             }
             //这样前端页面可取到数据
-            SecurityUtils.getSubject().getSession().setAttribute("user", user);
-            SecurityUtils.getSubject().getSession().setAttribute("userId", user.getId());
-            UserAvatar avatar = userService.getAvatarByUserId(user.getId());
-            if (avatar == null) {
-                avatar = new UserAvatar();
-            }
-            if (StringUtils.isBlank(avatar.getSrc())) {
-                avatar.setSrc("/resources/adminlte/dist/img/user0-160x160.jpg");
-            }
-            SecurityUtils.getSubject().getSession().setAttribute("userAvatar", avatar);
+            userService.refreshSession(user);
+
             // 注意此处的返回值没有使用加盐方式,如需要加盐，可以在密码参数上加
             return new SimpleAuthenticationInfo(user.getId(), token.getPassword(), token.getUsername());
         }

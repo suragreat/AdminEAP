@@ -119,7 +119,11 @@
                                 modals.hideWin(winId);
                                 ${htmlPrefix}Table.reloadData();
                             }
+                        } else{
+                            modals.error(data.message);
                         }
+                        }
+                    }
                     });
                 });
             },
