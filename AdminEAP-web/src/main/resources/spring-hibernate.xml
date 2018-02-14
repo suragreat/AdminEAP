@@ -16,7 +16,7 @@ http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
 		<!-- destroy-method="close" -->
 	<!-- 配置c3p0数据源 -->
 	<bean id="dataSource" name="dataSource"
-		class="com.alibaba.druid.pool.DruidDataSource" destroy-method="close" init-method="init">
+		class="com.cnpc.framework.db.EncDataSource" destroy-method="close" init-method="init">
 		<property name="driverClassName" value="${driverClassName}" />
 		<property name="url" value="${jdbc_url}" />
 		<property name="username" value="${jdbc_username}" />
