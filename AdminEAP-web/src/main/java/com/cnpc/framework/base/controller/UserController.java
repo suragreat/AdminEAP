@@ -88,10 +88,10 @@ public class UserController {
                 userService.updateUserAvatar(user, request.getRealPath("/"));
             } else {
                 User oldUser = this.getUser(user.getId());
-                BeanUtils.copyProperties(user, oldUser, "password");
                 if (!oldUser.getLoginName().equals(user.getLoginName())) {
                     oldUser.setPassword(EncryptUtil.getPassword(initPassword, user.getLoginName()));
                 }
+                BeanUtils.copyProperties(user, oldUser, "password");
                 oldUser.setUpdateDateTime(new Date());
                 userService.update(oldUser);
             }
