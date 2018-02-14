@@ -65,7 +65,7 @@
                 var params = form.getFormSimpleData();
                 ajaxPost(basePath + '/user/changePwd', params, function (data, status) {
                     if (data.success) {
-                        modals.info("密码修改成功");
+                        modals.correct("密码修改成功");
                         modals.hideWin('changePwd');
                     } else {
                         modals.error(data.message);
